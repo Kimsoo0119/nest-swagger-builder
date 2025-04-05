@@ -59,7 +59,7 @@ import { ApiDecoratorBuilder } from "nest-swagger-builder";
 import { UserController } from "../user.controller";
 import { UserDto } from "../../dto/user.dto";
 
-export const ApiUser: Record<keyof UserController, any> = {
+export const ApiUser: Record<keyof UserController> = {
   GetUsers: (apiOperationOptions) => {
     return new ApiDecoratorBuilder()
       .withOperation(apiOperationOptions)
