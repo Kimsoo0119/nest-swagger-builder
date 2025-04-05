@@ -4,10 +4,10 @@ import { ApiResponse } from "@nestjs/swagger";
 import { ApiErrorResponse } from "../interfaces";
 
 /**
- * Swagger 예외 응답 스키마를 생성합니다.
- * @param status HTTP 에러 상태 코드
- * @param errors 에러 목록
- * @returns 데코레이터
+ * Create a Swagger exception response schema
+ * @param status HTTP Error Status Code
+ * @param errors Error List
+ * @returns Decorator
  */
 export function createExceptionResponse(status: ErrorHttpStatusCode, errors: ApiErrorResponse[]) {
   const examples: Record<string, any> = {};

@@ -17,16 +17,16 @@ export type ApiOperationOptions = Required<Pick<Partial<OperationObject>, "summa
   Partial<OperationObject>;
 
 /**
- * API 데코레이터 빌더 클래스
+ * API Decorator Builder Class
  *
- * 메서드 체이닝을 통해 Swagger 데코레이터를 쉽게 구성할 수 있습니다.
+ * Easily configure Swagger decorators using method chaining.
  */
 export class ApiDecoratorBuilder {
   private decorators: Array<MethodDecorator | PropertyDecorator> = [];
 
   /**
-   * API 작업 정보
-   * @param options API 작업 옵션
+   * API Operation Information
+   * @param options API Operation Options
    */
   withOperation(options: ApiOperationOptions): this {
     this.decorators.push(ApiOperation(options));
@@ -34,8 +34,8 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * Cookie 인증
-   * @param name 토큰명
+   * Cookie Authentication
+   * @param name Token Name
    */
   withCookieAuth(name?: string): this {
     this.decorators.push(ApiCookieAuth(name));
@@ -43,8 +43,8 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * Bearer 인증
-   * @param name 토큰명
+   * Bearer Authentication
+   * @param name Token Name
    */
   withBearerAuth(name?: string): this {
     this.decorators.push(ApiBearerAuth(name));
@@ -52,9 +52,9 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 상태 응답만
-   * @param status HTTP 상태 코드
-   * @param key 응답 키
+   * Status Response Only
+   * @param status HTTP Status Code
+   * @param key Response Key
    */
   withStatusResponse(status: number, key: string): this {
     this.decorators.push(createStatusResponse(status, key));
@@ -62,11 +62,11 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 상세 응답
-   * @param status HTTP 상태 코드
-   * @param key 응답 키
-   * @param type 응답 타입
-   * @param options 옵션
+   * Detailed Response
+   * @param status HTTP Status Code
+   * @param key Response Key(Unique)
+   * @param type Response Type
+   * @param options Options
    */
   withBodyResponse(
     status: number,
@@ -79,9 +79,9 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 예외 응답
-   * @param status HTTP 상태 코드
-   * @param errors 에러 목록
+   * Exception Response
+   * @param status HTTP Status Code
+   * @param errors Error List
    */
   withException(status: number, errors: ApiErrorResponse[]): this {
     this.decorators.push(createExceptionResponse(status, errors));
@@ -89,8 +89,8 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 에러 응답
-   * @param responses 에러 응답 목록
+   * Error Response
+   * @param responses Error Response List
    */
   withErrorResponses(errors: ApiErrorResponse[]): this {
     this.decorators.push(createExceptionResponse(HttpStatus.BAD_REQUEST, errors));
@@ -98,8 +98,8 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 인증 필요 에러 (401)
-   * @param responses 에러 응답 목록
+   * Unauthorized Error (401)
+   * @param responses Error Response List
    */
   withUnauthorizedResponse(errors: ApiErrorResponse[]): this {
     this.decorators.push(createExceptionResponse(HttpStatus.UNAUTHORIZED, errors));
@@ -107,8 +107,8 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 권한 부족 에러 (403)
-   * @param responses 에러 응답 목록
+   * Forbidden Error (403)
+   * @param responses Error Response List
    */
   withForbiddenResponse(errors: ApiErrorResponse[]): this {
     this.decorators.push(createExceptionResponse(HttpStatus.FORBIDDEN, errors));
@@ -116,8 +116,8 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 리소스 없음 에러 (404)
-   * @param responses 에러 응답 목록
+   * Not Found Error (404)
+   * @param responses Error Response List
    */
   withNotFoundResponse(errors: ApiErrorResponse[]): this {
     this.decorators.push(createExceptionResponse(HttpStatus.NOT_FOUND, errors));
@@ -125,8 +125,8 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 커스텀 데코레이터
-   * @param decorator 추가할 데코레이터
+   * Custom Decorator
+   * @param decorator Additional Decorator
    */
   withDecorator(decorator: MethodDecorator | PropertyDecorator): this {
     this.decorators.push(decorator);
@@ -134,7 +134,7 @@ export class ApiDecoratorBuilder {
   }
 
   /**
-   * 모든 데코레이터를 결합하여 반환
+   * Combine all decorators and return
    */
   build(): PropertyDecorator {
     return applyDecorators(...this.decorators);

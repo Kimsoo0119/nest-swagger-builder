@@ -1,12 +1,11 @@
-import { ApiOperationOptions } from '@nestjs/swagger';
+import { ApiOperationOptions } from "@nestjs/swagger";
 
 /**
- * API 작업 정의를 위한 타입
- * @template M 컨트롤러 메서드의 키 타입
+ * Type for defining API operations
+ * @template M Controller method key type
  */
 export type ApiOperator<M extends string> = {
   [key in Capitalize<M>]: (
-    apiOperationOptions: Required<Pick<ApiOperationOptions, 'summary'>> &
-      ApiOperationOptions,
+    apiOperationOptions: Required<Pick<ApiOperationOptions, "summary">> & ApiOperationOptions
   ) => PropertyDecorator;
 };

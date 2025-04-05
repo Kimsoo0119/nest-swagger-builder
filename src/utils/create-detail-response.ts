@@ -4,12 +4,12 @@ import { ApiExtraModels, ApiProperty, ApiPropertyOptions, ApiResponse } from "@n
 import { isArray } from "class-validator";
 
 /**
- * Swagger 상세 응답 스키마를 생성합니다.
- * @param status HTTP 상태 코드
- * @param key 응답 키(unique)
- * @param type 응답 타입
- * @param options 추가 API 속성 옵션
- * @returns 데코레이터
+ * Create a detailed response schema for Swagger
+ * @param status HTTP Status Code
+ * @param key Response Key (unique)
+ * @param type Response Type
+ * @param options Additional API property options
+ * @returns Decorator
  */
 export function createDetailResponse(
   status: Exclude<HttpStatus, ErrorHttpStatusCode>,
