@@ -1,0 +1,24 @@
+# 소스 코드
+src/
+
+# 테스트 코드
+test/
+coverage/
+*.spec.ts
+
+# 설정 파일
+tsconfig.json
+.eslintrc.js
+.prettierrc
+.gitignore
+
+# 에디터 설정
+.vscode/
+.idea/
+
+# 노드 모듈
+node_modules/
+
+# 기타
+*.log
+.DS_Store 
