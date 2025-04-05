@@ -15,7 +15,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle("NestJS API")
-    .setDescription("NestJS Swagger Utils 테스트 API")
+    .setDescription("NestJS Swagger Utils Test API")
     .setVersion("1.0")
     .addBearerAuth({
       type: "http",
