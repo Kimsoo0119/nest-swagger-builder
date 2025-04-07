@@ -1,10 +1,23 @@
-# nest-swagger-builder
+# Nest Swagger Builder
+
+[![npm version](https://badge.fury.io/js/nest-swagger-builder.svg)](https://badge.fury.io/js/nest-swagger-builder)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A utility library that simplifies the NestJS Swagger documentation process.
 
+[한국어](README.ko.md)
+
 ## Introduction
 
-`nest-swagger-builder` is a library that helps you create Swagger documentation in NestJS applications more easily and consistently. It enables writing highly readable API documentation through a method chaining builder pattern.
+`nest-swagger-builder` makes creating Swagger documentation in NestJS applications more intuitive and maintainable. It introduces a method chaining builder pattern that results in cleaner, more readable API documentation code.
+
+### Why Use Nest Swagger Builder?
+
+- **Reduce Boilerplate**: Simplify complex Swagger decorator configurations
+- **Type Safety**: Leverage TypeScript's type system for better developer experience
+- **Consistency**: Maintain uniform API documentation across your entire project
+- **Readability**: Write self-documenting API decorator configurations
+- **Maintainability**: Organize your Swagger documentation into dedicated files
 
 ## Installation
 
@@ -12,54 +25,34 @@ A utility library that simplifies the NestJS Swagger documentation process.
 npm install nest-swagger-builder
 ```
 
-## Supported Versions
+### Peer Dependencies
 
-- NestJS: ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
-- Swagger: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+This library requires the following peer dependencies:
 
-## Key Features
-
-### API Decorator Builder
-
-You can easily configure Swagger decorators through method chaining.
-
-```typescript
-import { ApiDecoratorBuilder } from 'nest-swagger-builder';
-
-export const ApiUser = {
-  GetUsers: (options) => {
-    return new ApiDecoratorBuilder()
-      .withOperation(options)
-      .withBearerAuth()
-      .withBodyResponse(200, 'ApiUser_GetUsers', [UserDto],)
-      .withUnauthorizedResponse([
-        { name: "case1", error: "error1", description: "description1" },
-        { name: "case2", error: "error2", description: "description2" },
-      ])
-      .build();
-  }
-};
-
-// Usage in controller
-@ApiUser.GetUsers({ summary: 'Get all users' })
-@Get()
-getUsers() {
-  return this.users;
-}
+```bash
+npm install @nestjs/common @nestjs/swagger class-transformer class-validator
 ```
 
-## Usage Examples
+## Supported Versions
 
-### 1. Configuring Swagger API Decorators
+- NestJS: ^8.0.0 || ^9.0.0 || ^10.0.0
+- Swagger: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+- class-validator: ^0.13.2 || ^0.14.0
+- class-transformer: ^0.5.1
+
+## Quick Start
+
+### 1. Create a Swagger Declaration File
 
 ```typescript
 // src/controllers/swagger/user.swagger.ts
 import { HttpStatus } from "@nestjs/common";
-import { ApiDecoratorBuilder } from "nest-swagger-builder";
+import { ApiDecoratorBuilder, ApiOperator } from "nest-swagger-builder";
 import { UserController } from "../user.controller";
 import { UserDto } from "../../dto/user.dto";
 
-export const ApiUser: Record<keyof UserController> = {
+// Type-safe API operator with controller method keys
+export const ApiUser: ApiOperator<keyof UserController> = {
   GetUsers: (apiOperationOptions) => {
     return new ApiDecoratorBuilder()
       .withOperation(apiOperationOptions)
@@ -68,44 +61,15 @@ export const ApiUser: Record<keyof UserController> = {
       .build();
   },
 
-  CreateUser: (apiOperationOptions) => {
-    return new ApiDecoratorBuilder()
-      .withOperation(apiOperationOptions)
-      .withBearerAuth()
-      .withStatusResponse(HttpStatus.CREATED, "ApiUser_CreateUser")
-      .withErrorResponses([
-        {
-          name: "ValidationError",
-          error: "Validation Failed",
-          description: "The input data is not valid.",
-        },
-      ])
-      .build();
-  },
-
-  GetUser: (apiOperationOptions) => {
-    return new ApiDecoratorBuilder()
-      .withOperation(apiOperationOptions)
-      .withBearerAuth()
-      .withBodyResponse(HttpStatus.OK, "ApiUser_GetUser", UserDto)
-      .withNotFoundResponse([
-        {
-          name: "UserNotFound",
-          error: "User Not Found",
-          description: "The user with the given ID cannot be found.",
-        },
-      ])
-      .build();
-  },
+  // More API definitions...
 };
 ```
 
-### 2. Using in Controllers
+### 2. Use in Your Controller
 
 ```typescript
 // src/controllers/user.controller.ts
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { CreateUserDto } from "../dto/request/create-user.dto";
+import { Controller, Get } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiUser } from "./swagger/user.swagger";
 
@@ -120,24 +84,64 @@ export class UserController {
     return this.users;
   }
 
-  @ApiUser.CreateUser({ summary: "Create new user" })
-  @Post()
-  createUser(@Body() createUserDto: CreateUserDto) {
-    const newUser = {
-      id: this.users.length + 1,
-      ...createUserDto,
-      password: "******",
-    };
-    this.users.push(newUser);
-    return newUser;
-  }
-
-  @ApiUser.GetUser({ summary: "Get user by ID" })
-  @Get(":id")
-  getUser(@Param("id") id: string) {
-    return this.users.find((user) => user.id === parseInt(id));
-  }
+  // More controller methods...
 }
+```
+
+## Usage Patterns
+
+### Simple Response with Status Code Only
+
+```typescript
+new ApiDecoratorBuilder()
+  .withOperation({ summary: "Create new user" })
+  .withBearerAuth()
+  .withStatusResponse(HttpStatus.CREATED, "UserCreated")
+  .build();
+```
+
+### Response with Data
+
+```typescript
+new ApiDecoratorBuilder()
+  .withOperation({ summary: "Get user profile" })
+  .withBearerAuth()
+  .withBodyResponse(HttpStatus.OK, "UserProfile", UserDto)
+  .build();
+```
+
+### Array Response
+
+```typescript
+new ApiDecoratorBuilder()
+  .withOperation({ summary: "Get all users" })
+  .withBearerAuth()
+  .withBodyResponse(HttpStatus.OK, "UsersList", [UserDto])
+  .build();
+```
+
+### Error Responses
+
+```typescript
+new ApiDecoratorBuilder()
+  .withOperation({ summary: "Delete user" })
+  .withBearerAuth()
+  .withStatusResponse(HttpStatus.NO_CONTENT, "UserDeleted")
+  .withUnauthorizedResponse([
+    {
+      name: "InvalidToken",
+      error: "Invalid Token",
+      description: "The provided authentication token is invalid",
+    },
+  ])
+  .withNotFoundResponse([
+    {
+      name: "UserNotFound",
+      error: "User Not Found",
+      description: "The user with the given ID was not found",
+    },
+  ])
+  .build();
 ```
 
 ## API Reference
@@ -163,21 +167,61 @@ A class that creates Swagger decorators through method chaining.
 | `withDecorator`            | Add custom decorator               | `decorator: MethodDecorator \| PropertyDecorator`                                  |
 | `build`                    | Combine all decorators and return  | -                                                                                  |
 
-### Utility Functions
+### Interfaces
 
-| Function                  | Description                           | Parameters                                                                         |
-| ------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
-| `createStatusResponse`    | Create response with status code only | `status: number, key: string`                                                      |
-| `createDetailResponse`    | Create response with data             | `status: number, key: string, type: Type \| Type[], options?: Record<string, any>` |
-| `createExceptionResponse` | Create exception response             | `status: number, errors: ApiErrorResponse[]`                                       |
+#### ApiErrorResponse
 
-## Features
+```typescript
+interface ApiErrorResponse {
+  name: string;
+  error: string;
+  description?: string;
+}
+```
 
-- **Functional Approach**: Writing clear, purpose-driven code through utility functions
+#### ApiOperator
+
+```typescript
+type ApiOperator<M extends string> = {
+  [key in Capitalize<M>]: (
+    apiOperationOptions: Required<Pick<ApiOperationOptions, "summary">> & ApiOperationOptions
+  ) => PropertyDecorator;
+};
+```
+
+## Examples
+
+The repository includes an example NestJS application demonstrating how to use the library:
+
+```bash
+# Clone the repository
+git clone https://github.com/Kimsoo0119/nest-swagger-builder.git
+
+# Install dependencies in the main project
+cd nest-swagger-builder
+npm install
+npm run build
+
+# Run the example application
+cd examples
+npm install
+npm run start:dev
+
+# Access Swagger UI
+Open http://localhost:3000/api in your browser
+```
+
+## Key Benefits
+
+- **Functional Approach**: Write clear, purpose-driven code through utility functions
 - **Type Safety**: Strong type support through TypeScript
-- **Consistent Documentation**: Consistent Swagger documentation across the project
-- **Flexible Extensibility**: Ability to add custom decorators
+- **Consistent Documentation**: Maintain uniform Swagger documentation across your project
+- **Flexible Extensibility**: Easily add custom decorators
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT
+This library is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
