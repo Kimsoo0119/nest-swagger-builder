@@ -144,6 +144,46 @@ new ApiDecoratorBuilder()
   .build();
 ```
 
+### File Upload with Multipart Form Data
+
+For handling file uploads, use the `withFormDataRequest` method:
+
+```typescript
+// Single File Upload
+new ApiDecoratorBuilder()
+  .withOperation(apiOperationOptions)
+  .withFormDataRequest("ProfileImage", "image")
+  .withBodyResponse(HttpStatus.CREATED, "ImageUploaded", ImageDto)
+  .build();
+
+// Multiple Files Upload
+new ApiDecoratorBuilder()
+  .withOperation(apiOperationOptions)
+  .withFormDataRequest("GalleryImages", "images", {
+    isArray: true,
+  })
+  .withBodyResponse(HttpStatus.CREATED, "ImagesUploaded", [ImageDto])
+  .build();
+```
+
+And use it in your controller with NestJS's `FileInterceptor` or `FilesInterceptor`:
+
+```typescript
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+
+@ApiS3.UploadImageFile({ summary: "Upload single image" })
+@UseInterceptors(FileInterceptor('image'))
+@Post('upload')
+uploadFile(@UploadedFile() file: Express.Multer.File) {}
+
+
+@ApiS3.UploadImageFiles({ summary: "Upload multiple images" })
+@UseInterceptors(FilesInterceptor('images'))
+@Post('upload-multiple')
+uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {}
+
+```
+
 ## API Reference
 
 ### ApiDecoratorBuilder
@@ -159,6 +199,7 @@ A class that creates Swagger decorators through method chaining.
 | `withBearerAuth`           | Add Bearer authentication          | `name?: string`                                                                    |
 | `withStatusResponse`       | Add response with status code only | `status: number, key: string`                                                      |
 | `withBodyResponse`         | Add response with data             | `status: number, key: string, type: Type \| Type[], options?: Record<string, any>` |
+| `withFormDataRequest`      | Add file upload support            | `key: string, fileFieldName: string, options?: Record<string, any>`                |
 | `withException`            | Add exception response             | `status: number, errors: ApiErrorResponse[]`                                       |
 | `withErrorResponses`       | Add 400 error responses            | `errors: ApiErrorResponse[]`                                                       |
 | `withUnauthorizedResponse` | Add 401 error responses            | `errors: ApiErrorResponse[]`                                                       |

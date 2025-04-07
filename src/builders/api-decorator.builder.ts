@@ -11,6 +11,7 @@ import { OperationObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.i
 import { createDetailResponse } from "../utils/create-detail-response";
 import { createStatusResponse } from "../utils/create-status-response";
 import { createExceptionResponse } from "../utils/create-exception-response";
+import { createFormDataRequest } from "../utils/create-form-data-request";
 import { ApiErrorResponse } from "../interfaces";
 
 export type ApiOperationOptions = Required<Pick<Partial<OperationObject>, "summary">> &
@@ -48,6 +49,17 @@ export class ApiDecoratorBuilder {
    */
   withBearerAuth(name?: string): this {
     this.decorators.push(ApiBearerAuth(name));
+    return this;
+  }
+
+  /**
+   * Multipart Form Data for File Upload
+   * @param key Response Key(Unique)
+   * @param fileFieldName Name of the file field in form
+   * @param options Options
+   */
+  withFormDataRequest(key: string, fileFieldName: string, options: Record<string, any> = {}): this {
+    this.decorators.push(createFormDataRequest(key, fileFieldName, options));
     return this;
   }
 

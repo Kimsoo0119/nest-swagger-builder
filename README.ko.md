@@ -144,6 +144,54 @@ new ApiDecoratorBuilder()
   .build();
 ```
 
+### Multipart Form Data를 이용한 파일 업로드
+
+파일 업로드를 처리하려면 `withFormDataRequest` 메서드를 사용하세요
+
+```typescript
+// 단일 파일 업로드
+new ApiDecoratorBuilder()
+  .withOperation(apiOperationOptions)
+  .withFormDataRequest("ProfileImage", "image")
+  .withBodyResponse(HttpStatus.CREATED, "ImageUploaded", ImageDto)
+  .build();
+
+// 다중 파일 업로드
+new ApiDecoratorBuilder()
+  .withOperation(apiOperationOptions)
+  .withFormDataRequest("GalleryImages", "images", {
+    isArray: true,
+  })
+  .withBodyResponse(HttpStatus.CREATED, "ImagesUploaded", [ImageDto])
+  .build();
+```
+
+그리고 컨트롤러에서 NestJS의 `FileInterceptor` 또는 `FilesInterceptor`와 함께 사용하세요:
+
+```typescript
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+
+@ApiUser.UploadImageFile({ summary: "단일 이미지 업로드" })
+@UseInterceptors(FileInterceptor('image'))
+@Post('upload')
+uploadFile(@UploadedFile() file: Express.Multer.File) {
+  return {
+    filename: file.originalname,
+    size: file.size
+  };
+}
+
+@ApiUser.UploadImageFiles({ summary: "다중 이미지 업로드" })
+@UseInterceptors(FilesInterceptor('images'))
+@Post('upload-multiple')
+uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
+  return files.map(file => ({
+    filename: file.originalname,
+    size: file.size
+  }));
+}
+```
+
 ## API 참조
 
 ### ApiDecoratorBuilder
@@ -159,6 +207,7 @@ new ApiDecoratorBuilder()
 | `withBearerAuth`           | Bearer 인증 추가             | `name?: string`                                                                    |
 | `withStatusResponse`       | 상태 코드만 있는 응답 추가   | `status: number, key: string`                                                      |
 | `withBodyResponse`         | 데이터가 포함된 응답 추가    | `status: number, key: string, type: Type \| Type[], options?: Record<string, any>` |
+| `withFormDataRequest`      | 파일 업로드 지원 추가        | `key: string, fileFieldName: string, options?: Record<string, any>`                |
 | `withException`            | 예외 응답 추가               | `status: number, errors: ApiErrorResponse[]`                                       |
 | `withErrorResponses`       | 400 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                       |
 | `withUnauthorizedResponse` | 401 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                       |

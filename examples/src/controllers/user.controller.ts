@@ -1,7 +1,19 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
+} from "@nestjs/common";
 import { CreateUserDto } from "../dto/request/create-user.dto.js";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiUser } from "src/controllers/swagger/user.swagger";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 
 @ApiTags("users")
 @Controller("users")
@@ -17,6 +29,7 @@ export class UserController {
       password: "******",
     };
     this.users.push(newUser);
+
     return newUser;
   }
 
@@ -30,5 +43,19 @@ export class UserController {
   @Get(":id")
   getUser(@Param("id", ParseIntPipe) id: number) {
     return this.users.find((user) => user.id === id);
+  }
+
+  @ApiUser.UploadImageFile({ summary: "Upload File" })
+  @UseInterceptors(FileInterceptor("image"))
+  @Post("upload")
+  UploadImageFile(@UploadedFile() image: Express.Multer.File) {
+    return `https://www.test.com/${image.fieldname}`;
+  }
+
+  @ApiUser.UploadImageFiles({ summary: "Upload Files" })
+  @UseInterceptors(FilesInterceptor("images"))
+  @Post("upload-files")
+  UploadImageFiles(@UploadedFiles() images: Express.Multer.File[]) {
+    return images.map((image) => `https://www.test.com/${image.fieldname}`);
   }
 }
