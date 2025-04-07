@@ -2,6 +2,14 @@
   "name": "nest-swagger-builder",
   "version": "0.0.1",
   "description": "A utility library that simplifies the NestJS Swagger documentation process.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kimsoo0119/nest-swagger-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kimsoo0119/nest-swagger-builder/issues"
+  },
+  "homepage": "https://github.com/Kimsoo0119/nest-swagger-builder#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
