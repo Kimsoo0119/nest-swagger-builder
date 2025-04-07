@@ -1,4 +1,5 @@
 import { HttpStatus } from "@nestjs/common";
+import { maxLength } from "class-validator";
 import { ApiDecoratorBuilder, ApiOperator } from "nest-swagger-builder";
 import { UserController } from "src/controllers/user.controller";
 import { UserDto } from "src/dto/user.dto";
@@ -33,6 +34,24 @@ export const ApiUser: ApiOperator<keyof UserController> = {
       .withOperation(apiOperationOptions)
       .withBearerAuth()
       .withBodyResponse(HttpStatus.OK, "ApiUser_GetUser", UserDto)
+      .build();
+  },
+
+  UploadImageFile: (apiOperationOptions) => {
+    return new ApiDecoratorBuilder()
+      .withOperation(apiOperationOptions)
+      .withFormDataRequest("ApiUser_UploadFile", "image")
+      .withBodyResponse(HttpStatus.CREATED, "ApiUser_UploadImageFile", String)
+      .build();
+  },
+
+  UploadImageFiles: (apiOperationOptions) => {
+    return new ApiDecoratorBuilder()
+      .withOperation(apiOperationOptions)
+      .withFormDataRequest("ApiUser_UploadFiles", "images", {
+        isArray: true,
+      })
+      .withBodyResponse(HttpStatus.CREATED, "ApiUser_UploadImageFiles", [String])
       .build();
   },
 };
