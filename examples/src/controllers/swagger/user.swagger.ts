@@ -1,6 +1,6 @@
 import { HttpStatus } from "@nestjs/common";
-import { maxLength } from "class-validator";
 import { ApiDecoratorBuilder, ApiOperator } from "nest-swagger-builder";
+import { CustomSwaggerBuilder } from "src/config/custom-swagger-builder";
 import { UserController } from "src/controllers/user.controller";
 import { UserDto } from "src/dto/user.dto";
 
@@ -25,13 +25,15 @@ export const ApiUser: ApiOperator<keyof UserController> = {
     return new ApiDecoratorBuilder()
       .withOperation(apiOperationOptions)
       .withCookieAuth()
-      .withBodyResponse(HttpStatus.OK, "ApiUser_GetUsers", [UserDto])
+      .withBodyResponse(HttpStatus.OK, "ApiUser_GetUsers", [UserDto], {
+        statusKey: "status",
+        wrapperKey: "data",
+      })
       .build();
   },
 
   GetUser: (apiOperationOptions) => {
-    return new ApiDecoratorBuilder()
-      .withOperation(apiOperationOptions)
+    return CustomSwaggerBuilder.withOperation(apiOperationOptions)
       .withBearerAuth()
       .withBodyResponse(HttpStatus.OK, "ApiUser_GetUser", UserDto)
       .build();
