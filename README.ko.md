@@ -3,44 +3,38 @@
 [![npm version](https://badge.fury.io/js/nest-swagger-builder.svg)](https://badge.fury.io/js/nest-swagger-builder)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-NestJS Swagger 문서화 과정을 단순화하는 유틸리티 라이브러리입니다.
+NestJS에서 Swagger 문서 작성을 함수형 스타일로, 타입 안전하고 직관적으로 구성할 수 있는 유틸리티 라이브러리입니다.
 
 [English](README.md)
 
-## Introduction
+## ✨ 주요 특징
 
-`nest-swagger-builder`는 NestJS 애플리케이션에서 Swagger 문서 작성을 더 직관적이고 유지보수하기 쉽게 만듭니다. 메서드 체이닝 빌더 패턴을 도입하여 더 깔끔하고 가독성 높은 API 문서화 코드를 작성할 수 있습니다.
+- **보일러플레이트 감소**: 복잡한 Swagger 데코레이터를 간결하게 선언
+- **타입 안전성**: Nest 컨트롤러 메서드를 기준으로 API 키 생성
+- **가독성 및 일관성**: 선언적이고 명확한 Swagger 구성
+- **유지보수성 향상**: Swagger 구성을 별도 파일로 분리 가능
+- **유연한 커스터마이징**: 응답 구조(statusKey, wrapperKey)를 상황에 맞게 조정 가능
 
-### Nest Swagger Builder를 사용해야 하는 이유
-
-- **보일러플레이트 감소**: 복잡한 Swagger 데코레이터 설정을 단순화
-- **타입 안전성**: TypeScript의 타입 시스템을 활용하여 개발자 경험 향상
-- **일관성**: 프로젝트 전체에 걸쳐 균일한 API 문서화 유지
-- **가독성**: 자체 문서화가 되는 API 데코레이터 설정 작성
-- **유지보수성**: Swagger 문서를 전용 파일로 구성하여 관리
-
-## 설치
+## 📦 설치
 
 ```bash
 npm install nest-swagger-builder
 ```
 
-### Peer Dependencies
-
-이 라이브러리는 다음 Peer Dependencies가 필요합니다.
+### 필수 Peer Dependencies:
 
 ```bash
 npm install @nestjs/common @nestjs/swagger class-transformer class-validator
 ```
 
-## 지원 버전
+## ✅ 지원 범위
 
-- NestJS: ^8.0.0 || ^9.0.0 || ^10.0.0
-- Swagger: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
-- class-validator: ^0.13.2 || ^0.14.0
-- class-transformer: ^0.5.1
+- **NestJS**: ^8.0.0, ^9.0.0, ^10.0.0
+- **Swagger**: ^5.0.0 ~ ^8.0.0
+- **class-validator**: ^0.13.2 ~ ^0.14.0
+- **class-transformer**: ^0.5.1
 
-## 빠른 시작
+## 🚀 빠르게 시작하기
 
 ### 1. Swagger 선언 파일 작성
 
@@ -51,52 +45,86 @@ import { ApiDecoratorBuilder, ApiOperator } from "nest-swagger-builder";
 import { UserController } from "../user.controller";
 import { UserDto } from "../../dto/user.dto";
 
-// 컨트롤러 메서드를 키로 사용하여 타입 안전성 확보
 export const ApiUser: ApiOperator<keyof UserController> = {
-  GetUsers: (apiOperationOptions) => {
-    return new ApiDecoratorBuilder()
+  GetUsers: (apiOperationOptions) =>
+    new ApiDecoratorBuilder()
       .withOperation(apiOperationOptions)
       .withBearerAuth()
       .withBodyResponse(HttpStatus.OK, "ApiUser_GetUsers", [UserDto])
-      .build();
-  },
-
-  // 더 많은 API 정의...
+      .build(),
 };
 ```
 
 ### 2. 컨트롤러에서 사용
 
 ```typescript
-// src/controllers/user.controller.ts
-import { Controller, Get } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
-import { ApiUser } from "./swagger/user.swagger";
-
 @ApiTags("users")
 @Controller("users")
 export class UserController {
-  private users = [];
-
   @ApiUser.GetUsers({ summary: "모든 사용자 조회" })
   @Get()
   getUsers() {
     return this.users;
   }
-
-  // 더 많은 컨트롤러 메서드...
 }
 ```
 
-## 사용 패턴
+## 🧩 응답 구조 커스터마이징 (New)
 
-### 상태 코드만 있는 간단한 응답
+현업에서는 팀/서비스마다 Interceptor에서 반환하는 JSON 구조가 다릅니다.
+
+예:
+
+```typescript
+// A 서비스
+{ "statusCode": 200, "data": { ... } }
+
+// B 서비스
+{ "status": 200, "result": { ... } }
+```
+
+`nest-swagger-builder`는 기본적으로 순수 Swagger 구조(`{}`)를 반환합니다.
+하지만 다음 두 가지 방식으로 커스터마이징된 응답 구조를 Swagger에 손쉽게 반영할 수 있습니다:
+
+### ✅ 개별 응답에서 직접 설정
 
 ```typescript
 new ApiDecoratorBuilder()
-  .withOperation({ summary: "새 사용자 생성" })
+  .withOperation(apiOperationOptions)
+  .withBodyResponse(HttpStatus.OK, "UserDetail", UserDto, {
+    statusKey: "status",
+    wrapperKey: "data",
+  })
+  .build();
+```
+
+### ✅ 공통 설정 빌더 사용
+
+```typescript
+// src/config/custom-swagger-builder.ts
+export const CustomSwaggerBuilder = new ApiDecoratorBuilder({
+  statusKey: "status",
+  wrapperKey: "data",
+});
+```
+
+사용 예시:
+
+```typescript
+CustomSwaggerBuilder.withOperation(apiOperationOptions)
+  .withBodyResponse(HttpStatus.OK, "UserDetail", UserDto)
+  .build();
+```
+
+## 📝 API 응답 패턴
+
+### 상태 코드만 있는 응답
+
+```typescript
+new ApiDecoratorBuilder()
+  .withOperation(apiOperationOptions)
   .withBearerAuth()
-  .withStatusResponse(HttpStatus.CREATED, "UserCreated")
+  .withStatusResponse(HttpStatus.CREATED, "UserCreated", { statusKey: "statusCode" })
   .build();
 ```
 
@@ -104,9 +132,12 @@ new ApiDecoratorBuilder()
 
 ```typescript
 new ApiDecoratorBuilder()
-  .withOperation({ summary: "사용자 프로필 조회" })
+  .withOperation(apiOperationOptions)
   .withBearerAuth()
-  .withBodyResponse(HttpStatus.OK, "UserProfile", UserDto)
+  .withBodyResponse(HttpStatus.OK, "UserProfile", UserDto, {
+    statusKey: "status",
+    wrapperKey: "data",
+  })
   .build();
 ```
 
@@ -114,9 +145,12 @@ new ApiDecoratorBuilder()
 
 ```typescript
 new ApiDecoratorBuilder()
-  .withOperation({ summary: "모든 사용자 조회" })
+  .withOperation(apiOperationOptions)
   .withBearerAuth()
-  .withBodyResponse(HttpStatus.OK, "UsersList", [UserDto])
+  .withBodyResponse(HttpStatus.OK, "UsersList", [UserDto], {
+    statusKey: "status",
+    wrapperKey: "data",
+  })
   .build();
 ```
 
@@ -124,7 +158,7 @@ new ApiDecoratorBuilder()
 
 ```typescript
 new ApiDecoratorBuilder()
-  .withOperation({ summary: "사용자 삭제" })
+  .withOperation(apiOperationOptions)
   .withBearerAuth()
   .withStatusResponse(HttpStatus.NO_CONTENT, "UserDeleted")
   .withUnauthorizedResponse([
@@ -144,9 +178,7 @@ new ApiDecoratorBuilder()
   .build();
 ```
 
-### Multipart Form Data를 이용한 파일 업로드
-
-파일 업로드를 처리하려면 `withFormDataRequest` 메서드를 사용하세요
+### 파일 업로드 (Multipart Form Data)
 
 ```typescript
 // 단일 파일 업로드
@@ -159,14 +191,12 @@ new ApiDecoratorBuilder()
 // 다중 파일 업로드
 new ApiDecoratorBuilder()
   .withOperation(apiOperationOptions)
-  .withFormDataRequest("GalleryImages", "images", {
-    isArray: true,
-  })
+  .withFormDataRequest("GalleryImages", "images", { isArray: true })
   .withBodyResponse(HttpStatus.CREATED, "ImagesUploaded", [ImageDto])
   .build();
 ```
 
-그리고 컨트롤러에서 NestJS의 `FileInterceptor` 또는 `FilesInterceptor`와 함께 사용하세요:
+컨트롤러에서 사용 예시:
 
 ```typescript
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
@@ -175,56 +205,59 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 @UseInterceptors(FileInterceptor('image'))
 @Post('upload')
 uploadFile(@UploadedFile() file: Express.Multer.File) {
-  return {
-    filename: file.originalname,
-    size: file.size
-  };
-}
-
-@ApiUser.UploadImageFiles({ summary: "다중 이미지 업로드" })
-@UseInterceptors(FilesInterceptor('images'))
-@Post('upload-multiple')
-uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
-  return files.map(file => ({
-    filename: file.originalname,
-    size: file.size
-  }));
+  return { filename: file.originalname, size: file.size };
 }
 ```
 
-## API 참조
+## 📚 API 참조
 
 ### ApiDecoratorBuilder
 
 메서드 체이닝을 통해 Swagger 데코레이터를 생성하는 클래스입니다.
 
-#### 메서드
+#### 생성자
 
-| 메서드                     | 설명                         | 매개변수                                                                           |
-| -------------------------- | ---------------------------- | ---------------------------------------------------------------------------------- |
-| `withOperation`            | API 작업 정보 추가           | `options: ApiOperationOptions`                                                     |
-| `withCookieAuth`           | 쿠키 인증 추가               | `name?: string`                                                                    |
-| `withBearerAuth`           | Bearer 인증 추가             | `name?: string`                                                                    |
-| `withStatusResponse`       | 상태 코드만 있는 응답 추가   | `status: number, key: string`                                                      |
-| `withBodyResponse`         | 데이터가 포함된 응답 추가    | `status: number, key: string, type: Type \| Type[], options?: Record<string, any>` |
-| `withFormDataRequest`      | 파일 업로드 지원 추가        | `key: string, fileFieldName: string, options?: Record<string, any>`                |
-| `withException`            | 예외 응답 추가               | `status: number, errors: ApiErrorResponse[]`                                       |
-| `withErrorResponses`       | 400 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                       |
-| `withUnauthorizedResponse` | 401 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                       |
-| `withForbiddenResponse`    | 403 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                       |
-| `withNotFoundResponse`     | 404 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                       |
-| `withDecorator`            | 사용자 정의 데코레이터 추가  | `decorator: MethodDecorator \| PropertyDecorator`                                  |
-| `build`                    | 모든 데코레이터 결합 및 반환 | -                                                                                  |
+```typescript
+new ApiDecoratorBuilder(config?: ApiDecoratorBuilderConfig)
+```
+
+| 매개변수 | 설명                                 | 타입                        |
+| -------- | ------------------------------------ | --------------------------- |
+| `config` | 응답 형식 기본 설정 객체 (선택 사항) | `ApiDecoratorBuilderConfig` |
+
+#### ApiDecoratorBuilderConfig
+
+```typescript
+interface ApiDecoratorBuilderConfig {
+  wrapperKey?: string | undefined; // 응답 데이터를 감싸는 프로퍼티 이름 (예: "data")
+  statusKey?: string | undefined; // 상태 코드 프로퍼티 이름 (예: "statusCode")
+}
+```
+
+#### 주요 메서드
+
+| 메서드                     | 설명                         | 매개변수                                                                       |
+| -------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
+| `withOperation`            | API 작업 정보 추가           | `options: ApiOperationOptions`                                                 |
+| `withBearerAuth`           | Bearer 인증 추가             | `name?: string`                                                                |
+| `withStatusResponse`       | 상태 코드만 있는 응답 추가   | `status: number, key: string, options?: ResponseOptions`                       |
+| `withBodyResponse`         | 데이터가 포함된 응답 추가    | `status: number, key: string, type: Type \| Type[], options?: ResponseOptions` |
+| `withFormDataRequest`      | 파일 업로드 지원 추가        | `key: string, fileFieldName: string, options?: Record<string, any>`            |
+| `withErrorResponses`       | 400 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                   |
+| `withUnauthorizedResponse` | 401 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                   |
+| `withForbiddenResponse`    | 403 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                   |
+| `withNotFoundResponse`     | 404 오류 응답 추가           | `errors: ApiErrorResponse[]`                                                   |
+| `withDecorator`            | 사용자 정의 데코레이터 추가  | `decorator: MethodDecorator \| PropertyDecorator`                              |
+| `build`                    | 모든 데코레이터 결합 및 반환 | -                                                                              |
 
 ### 인터페이스
 
-#### ApiErrorResponse
+#### ResponseOptions
 
 ```typescript
-interface ApiErrorResponse {
-  name: string;
-  error: string;
-  description?: string;
+interface ResponseOptions {
+  statusKey?: string; // 응답에 포함될 상태 코드 필드 이름
+  wrapperKey?: string; // 응답에 포함될 데이터 필드 이름
 }
 ```
 
@@ -238,7 +271,7 @@ type ApiOperator<M extends string> = {
 };
 ```
 
-## 예제
+## 🔍 예제
 
 이 저장소에는 라이브러리 사용 방법을 보여주는 예제 NestJS 애플리케이션이 포함되어 있습니다:
 
@@ -260,17 +293,6 @@ npm run start:dev
 브라우저에서 http://localhost:3000/api 열기
 ```
 
-## 주요 이점
-
-- **함수형 접근 방식**: 유틸리티 함수를 통해 명확하고 목적이 분명한 코드 작성
-- **타입 안전성**: TypeScript의 강력한 타입 지원
-- **일관된 문서화**: 프로젝트 전체에 걸쳐 균일한 Swagger 문서 유지
-- **유연한 확장성**: 사용자 정의 데코레이터를 쉽게 추가 가능
-
-## 기여
-
-기여는 언제나 환영합니다! 풀 리퀘스트를 자유롭게 제출해 주세요.
-
-## 라이센스
+## 📋 라이센스
 
 이 라이브러리는 MIT 라이센스 하에 배포됩니다 - 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
