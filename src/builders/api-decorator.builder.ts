@@ -89,7 +89,7 @@ export class ApiDecoratorBuilder {
     return this;
   }
 
-  withErrorResponses(errors: ApiErrorResponse[]): this {
+  withBadRequestResponse(errors: ApiErrorResponse[]): this {
     return this.withException(HttpStatus.BAD_REQUEST, errors);
   }
 
