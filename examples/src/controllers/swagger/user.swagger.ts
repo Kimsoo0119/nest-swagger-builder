@@ -11,12 +11,12 @@ export const ApiUser: ApiOperator<keyof UserController> = {
       .withBearerAuth()
       .withStatusResponse(HttpStatus.CREATED, "ApiUser_CreateUser")
       .withException(HttpStatus.BAD_REQUEST, [
-        { name: "case1", error: "error1", description: "description1" },
-        { name: "case2", error: "error2", description: "description2" },
+        { error: "error1", description: "description1" },
+        { error: "error2", description: "description2" },
       ])
       .withUnauthorizedResponse([
-        { name: "case1", error: "error1", description: "description1" },
-        { name: "case2", error: "error2", description: "description2" },
+        { error: "error1", description: "description1" },
+        { error: "error2", description: "description2" },
       ])
       .build();
   },
