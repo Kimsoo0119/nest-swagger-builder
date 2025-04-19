@@ -75,8 +75,7 @@ export const ApiUser: Record<keyof UserController, any> = {
       .withStatusResponse(HttpStatus.CREATED, "ApiUser_CreateUser")
       .withErrorResponses([
         {
-          name: "ValidationError",
-          error: "Validation Failed",
+          error: "ValidationFailed",
           description: "The input data is not valid.",
         },
       ])
@@ -90,8 +89,7 @@ export const ApiUser: Record<keyof UserController, any> = {
       .withBodyResponse(HttpStatus.OK, "ApiUser_GetUser", UserDto)
       .withNotFoundResponse([
         {
-          name: "UserNotFound",
-          error: "User Not Found",
+          error: "UserNotFound",
           description: "The user with the given ID cannot be found.",
         },
       ])
