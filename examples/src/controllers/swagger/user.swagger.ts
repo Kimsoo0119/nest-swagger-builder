@@ -1,15 +1,18 @@
 import { HttpStatus } from "@nestjs/common";
 import { ApiDecoratorBuilder, ApiOperator } from "nest-swagger-builder";
-import { CustomSwaggerBuilder } from "src/config/custom-swagger-builder";
+import {
+  CustomSwaggerBuilder,
+  SuccessSwaggerBuilder,
+  StandardSwaggerBuilder,
+} from "src/config/custom-swagger-builder";
 import { UserController } from "src/controllers/user.controller";
 import { UserDto } from "src/dto/user.dto";
 
 export const ApiUser: ApiOperator<keyof UserController> = {
   CreateUser: (apiOperationOptions) => {
-    return new ApiDecoratorBuilder()
-      .withOperation(apiOperationOptions)
+    return StandardSwaggerBuilder.withOperation(apiOperationOptions)
       .withBearerAuth()
-      .withStatusResponse(HttpStatus.CREATED, "ApiUser_CreateUser")
+      .withBodyResponse(HttpStatus.CREATED, "ApiUser_CreateUser", UserDto)
       .withException(HttpStatus.BAD_REQUEST, [
         { error: "error1", description: "description1" },
         { error: "error2", description: "description2" },
@@ -22,12 +25,12 @@ export const ApiUser: ApiOperator<keyof UserController> = {
   },
 
   GetUsers: (apiOperationOptions) => {
-    return new ApiDecoratorBuilder()
-      .withOperation(apiOperationOptions)
+    return SuccessSwaggerBuilder.withOperation(apiOperationOptions)
       .withCookieAuth()
       .withBodyResponse(HttpStatus.OK, "ApiUser_GetUsers", [UserDto], {
-        statusKey: "status",
-        wrapperKey: "data",
+        extraFields: {
+          totalCount: { type: "number", example: 50 },
+        },
       })
       .build();
   },
