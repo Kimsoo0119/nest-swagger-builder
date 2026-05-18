@@ -289,3 +289,62 @@ describe("ApiDecoratorBuilder - extraFields", () => {
     expect(meta.isArray).toBe(true);
   });
 });
+
+describe("ApiDecoratorBuilder - withException name fallback & content-type", () => {
+  function getExceptionContent(target: any, status: number): any {
+    const responses = getMethodMeta(target, SWAGGER_API_RESPONSE);
+    return responses?.[status.toString()]?.content;
+  }
+
+  it("should use error code as examples key when name is omitted", () => {
+    const decorator = new ApiDecoratorBuilder()
+      .withException(400, [{ error: "INVALID_INPUT" }, { error: "MISSING_FIELD" }])
+      .build();
+
+    const Target = applyDecoratorToMethod(decorator);
+    const content = getExceptionContent(Target, 400);
+
+    expect(content["application/json"]).toBeDefined();
+    expect(Object.keys(content["application/json"].examples)).toEqual([
+      "INVALID_INPUT",
+      "MISSING_FIELD",
+    ]);
+  });
+
+  it("should use explicit name as examples key when provided", () => {
+    const decorator = new ApiDecoratorBuilder()
+      .withException(400, [{ name: "InvalidFile", error: "INVALID_INPUT" }])
+      .build();
+
+    const Target = applyDecoratorToMethod(decorator);
+    const content = getExceptionContent(Target, 400);
+
+    expect(Object.keys(content["application/json"].examples)).toEqual(["InvalidFile"]);
+  });
+
+  it("should mix name and error fallbacks within the same call", () => {
+    const decorator = new ApiDecoratorBuilder()
+      .withException(400, [
+        { name: "Case1", error: "ERR_A" },
+        { error: "ERR_B" },
+      ])
+      .build();
+
+    const Target = applyDecoratorToMethod(decorator);
+    const content = getExceptionContent(Target, 400);
+
+    expect(Object.keys(content["application/json"].examples)).toEqual(["Case1", "ERR_B"]);
+  });
+
+  it("should expose examples under application/json (not the legacy application-json typo)", () => {
+    const decorator = new ApiDecoratorBuilder()
+      .withException(400, [{ error: "X" }])
+      .build();
+
+    const Target = applyDecoratorToMethod(decorator);
+    const content = getExceptionContent(Target, 400);
+
+    expect(content["application/json"]).toBeDefined();
+    expect(content["application-json"]).toBeUndefined();
+  });
+});
