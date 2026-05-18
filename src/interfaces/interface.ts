@@ -3,7 +3,7 @@ import { ApiResponseOptions } from "@nestjs/swagger";
 
 export interface ApiErrorResponse {
   /**
-   * Swagger UI examples 의 라벨 key. 미지정 시 `error` 값을 fallback 으로 사용합니다.
+   * Label key for the Swagger UI examples entry. Falls back to `error` when omitted.
    */
   name?: string;
   error: string;
