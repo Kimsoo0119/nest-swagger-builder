@@ -13,14 +13,15 @@ export function createExceptionResponse(status: ErrorHttpStatusCode, errors: Api
   const examples: Record<string, any> = {};
 
   errors.forEach(({ name, error, description }) => {
-    examples[name] = { value: { status, error, description } };
+    const key = name ?? error;
+    examples[key] = { value: { status, error, description } };
   });
 
   return applyDecorators(
     ApiResponse({
       status,
       content: {
-        "application-json": {
+        "application/json": {
           examples,
         },
       },

@@ -14,11 +14,11 @@ export function createDetailResponse(
   type: Type | Type[],
   options: ResponseOptions = {}
 ) {
-  const { wrapperKey, statusKey, ...responseOptions } = options;
+  const { wrapperKey, statusKey, extraFields, ...responseOptions } = options;
   const isTypeArray = isArray(type);
   const resolvedType = isTypeArray ? type[0] : type;
 
-  if (!wrapperKey && !statusKey) {
+  if (!wrapperKey && !statusKey && !extraFields) {
     return applyDecorators(
       isTypeArray ? ApiExtraModels(...type) : ApiExtraModels(type),
       ApiResponse({
@@ -30,6 +30,24 @@ export function createDetailResponse(
   }
 
   class DetailResponseClass {}
+
+  if (extraFields) {
+    for (const [fieldKey, fieldOptions] of Object.entries(extraFields)) {
+      const isFieldArray = Array.isArray(fieldOptions.type);
+      const rawType = isFieldArray ? (fieldOptions.type as any[])[0] : fieldOptions.type;
+      const resolvedFieldType =
+        rawType === 'boolean' ? Boolean
+        : rawType === 'number' ? Number
+        : rawType === 'string' ? String
+        : rawType;
+
+      defineProperty(DetailResponseClass.prototype, fieldKey, {
+        type: resolvedFieldType,
+        ...(isFieldArray && { isArray: true }),
+        ...(fieldOptions.example !== undefined && { example: fieldOptions.example }),
+      });
+    }
+  }
 
   if (statusKey) {
     defineProperty(DetailResponseClass.prototype, statusKey, {
@@ -46,6 +64,12 @@ export function createDetailResponse(
 
   if (wrapperKey) {
     defineProperty(DetailResponseClass.prototype, wrapperKey, {
+      type,
+    });
+  }
+
+  if (!statusKey && !wrapperKey) {
+    defineProperty(DetailResponseClass.prototype, "data", {
       type,
     });
   }

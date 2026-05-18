@@ -5,7 +5,7 @@ import { createDetailResponse } from "../utils/create-detail-response";
 import { createStatusResponse } from "../utils/create-status-response";
 import { createExceptionResponse } from "../utils/create-exception-response";
 import { createFormDataRequest } from "../utils/create-form-data-request";
-import { ApiErrorResponse, ResponseOptions } from "../interfaces";
+import { ApiErrorResponse, ExtraFieldOptions, ResponseOptions } from "../interfaces";
 
 export type ApiOperationOptions = Required<Pick<Partial<OperationObject>, "summary">> &
   Partial<OperationObject>;
@@ -13,6 +13,7 @@ export type ApiOperationOptions = Required<Pick<Partial<OperationObject>, "summa
 export interface ApiDecoratorBuilderConfig {
   wrapperKey?: string | undefined;
   statusKey?: string | undefined;
+  extraFields?: Record<string, ExtraFieldOptions>;
 }
 
 /**
@@ -58,10 +59,16 @@ export class ApiDecoratorBuilder {
    * @returns Merged options
    */
   private getOptions<T extends Record<string, any>>(options: T = {} as T): T & ResponseOptions {
+    const mergedExtraFields =
+      this.config.extraFields || (options as any).extraFields
+        ? { ...this.config.extraFields, ...(options as any).extraFields }
+        : undefined;
+
     return {
       ...options,
       ...(this.config.statusKey !== undefined && { statusKey: this.config.statusKey }),
       ...(this.config.wrapperKey !== undefined && { wrapperKey: this.config.wrapperKey }),
+      ...(mergedExtraFields && { extraFields: mergedExtraFields }),
     } as T & ResponseOptions;
   }
 
@@ -111,6 +118,8 @@ export class ApiDecoratorBuilder {
   }
 
   build(): PropertyDecorator {
-    return applyDecorators(...this.decorators);
+    const result = applyDecorators(...this.decorators);
+    this.decorators = [];
+    return result;
   }
 }
